@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Kalender mit Feiertagen (DE & Hamburg) 2025–2027</title>
+
+  <!--
+    Diese Datei ist "SharePoint-freundlich":
+    - keine externen Skripte/Styles
+    - kann direkt als calendar.aspx hochgeladen werden
+    - Logo-Pfad (logo.png) ggf. anpassen
+  -->
+
+  <style>
+    /* ========= Grundlayout (an Vorlage angelehnt) ========= */
+    :root{
+      --brand: #0F4391;
+      --brand-200: #e7effc;
+      --bg: #f4f4f4;
+      --card: #ffffff;
+      --text: #222;
+      --muted:#6b7280;
+      --accent-red: #C9211E;
+      --weekend-bg:#f8f3f3;
+      --gap: 12px;
+      --radius: 10px;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      font-family: Calibri, system-ui, Segoe UI, Roboto, sans-serif;
+      margin: 0; background: var(--bg); color: var(--text);
+      line-height: 1.5;
+    }
+
+    .container{
+      max-width: 1100px; margin: 24px auto; padding: 16px;
+      background: var(--card); border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+
+    /* ========= Kopfbereich ========= */
+    .header{
+      display:flex; align-items:center; gap:14px; margin-bottom:12px;
+    }
+    .header img.logo{ width: 72px; height: 72px; object-fit:contain; }
+    .header h1{ margin:0; color: var(--brand); font-size:1.6rem; }
+    .header p{ margin:0; color: var(--muted); }
+
+    /* ========= Toolbar ========= */
+    .toolbar{
+      display:grid; grid-template-columns: 1fr auto; gap: 10px;
+      align-items:center; margin: 12px 0 20px;
+    }
+    .controls{
+      display:flex; flex-wrap:wrap; gap: 10px; align-items:center;
+    }
+    label{ font-weight:600; color:#374151; }
+    select, input[type="month"]{
+      padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; background:#fff;
+    }
+    button{
+      padding:9px 12px; background: var(--brand); color:#fff; border:0; border-radius:10px;
+      font-weight:700; cursor:pointer;
+    }
+    .legend{
+      justify-self:end; display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+      color: var(--muted); font-size:.95rem;
+    }
+    .dot{ width:12px; height:12px; border-radius:999px; display:inline-block; margin-right:6px; vertical-align:middle; }
+    .dot.weekend{ background: var(--weekend-bg); border:1px solid #eee; }
+    .dot.holiday{ background: var(--accent-red); }
+
+    /* ========= Monate als Karten ========= */
+    .months{
+      display:grid; gap: var(--gap);
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+    .month{
+      background:#fff; border-radius: var(--radius);
+      box-shadow: 0 1px 8px rgba(0,0,0,.06);
+      overflow:hidden; display:flex; flex-direction:column;
+    }
+    .month-header{
+      background: var(--brand); color:#fff; padding:10px 12px;
+      display:flex; align-items:center; justify-content:space-between; font-weight:700;
+    }
+    .month-header small{ opacity:.9; font-weight:600; }
+
+    .weekday-row{
+      display:grid; grid-template-columns: repeat(7, 1fr);
+      gap:1px; background:#e5e7eb;
+    }
+    .weekday-row span{
+      background: var(--brand-200); color:#11365f; text-align:center; font-weight:700;
+      padding:6px 4px; font-size:.85rem;
+    }
+
+    .grid{
+      display:grid; grid-template-columns: repeat(7, 1fr);
+      gap:1px; background:#e5e7eb; padding-bottom:1px;
+    }
+    .cell{
+      background:#fff; min-height:64px; padding:6px; position:relative;
+      display:flex; justify-content:flex-end; align-items:flex-start;
+    }
+    .cell.weekend{ background: var(--weekend-bg); }
+    .cell.holiday{
+      background:#ffeaea; outline:2px solid var(--accent-red); outline-offset:-2px;
+    }
+    .cell .day{ font-weight:800; color:#111827; }
+    .cell .label{
+      position:absolute; left:6px; right:6px; bottom:6px;
+      font-size:.75rem; font-weight:700; color:var(--accent-red); line-height:1.15;
+    }
+
+    /* ========= Druck ========= */
+    @media print {
+      body{ background:#fff; }
+      .container{ box-shadow:none; margin:0; border-radius:0; }
+      .toolbar{ display:none; }
+      .months{ grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .cell{ min-height:52px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- ==============================
+         Header (Logo aus Vorlage)
+         ============================== -->
+    <div class="header">
+      <!-- Logo-Datei ggf. an SharePoint-Pfad anpassen -->
+      <img class="logo" src="logo.png" alt="Abteilungslogo" />
+      <div>
+        <h1>Kalender 2025–2027 mit Feiertagen</h1>
+        <p>Umschaltbar: Deutschland (bundesweit) & Hamburg. Wochenenden/Feiertage farblich markiert.</p>
+      </div>
+    </div>
+
+    <!-- ==============================
+         Toolbar: Region + Zeitraum
+         ============================== -->
+    <div class="toolbar" aria-label="Filter und Aktionen">
+      <div class="controls">
+        <label for="region">Region:</label>
+        <select id="region">
+          <option value="DE" selected>Deutschland (bundesweit)</option>
+          <option value="DE-HH">Hamburg</option>
+        </select>
+
+        <label for="start">Start:</label>
+        <input id="start" type="month" value="2025-01" />
+        <label for="end">Ende:</label>
+        <input id="end" type="month" value="2027-12" />
+
+        <button id="build">Neu aufbauen</button>
+        <button onclick="window.print()">Drucken</button>
+      </div>
+
+      <div class="legend">
+        <span><span class="dot weekend"></span>Wochenende</span>
+        <span><span class="dot holiday"></span>Feiertag</span>
+      </div>
+    </div>
+
+    <!-- ==============================
+         Ausgabe
+         ============================== -->
+    <main id="months" class="months" aria-live="polite"></main>
+  </div>
+
+  <script>
+    /* =========================================================
+       Feiertage Deutschland (bundesweit) & Hamburg (DE-HH)
+       Jahre: 2025, 2026, 2027
+       (Die 2027er-Daten sind i. d. R. stabil berechenbar; amtliche
+        Bestätigungen erfolgen üblicherweise jährlich.)
+       ========================================================= */
+
+    const HOLIDAYS_DE = {
+      // ----- 2025 (bundesweit) -----
+      "2025-01-01": "Neujahr",
+      "2025-04-18": "Karfreitag",
+      "2025-04-21": "Ostermontag",
+      "2025-05-01": "Tag der Arbeit",
+      "2025-05-29": "Christi Himmelfahrt",
+      "2025-06-09": "Pfingstmontag",
+      "2025-10-03": "Tag der Deutschen Einheit",
+      "2025-12-25": "1. Weihnachtstag",
+      "2025-12-26": "2. Weihnachtstag",
+
+      // ----- 2026 (bundesweit) -----
+      "2026-01-01": "Neujahr",
+      "2026-04-03": "Karfreitag",
+      "2026-04-06": "Ostermontag",
+      "2026-05-01": "Tag der Arbeit",
+      "2026-05-14": "Christi Himmelfahrt",
+      "2026-05-25": "Pfingstmontag",
+      "2026-10-03": "Tag der Deutschen Einheit",
+      "2026-12-25": "1. Weihnachtstag",
+      "2026-12-26": "2. Weihnachtstag",
+
+      // ----- 2027 (bundesweit) -----
+      "2027-01-01": "Neujahr",
+      "2027-03-26": "Karfreitag",
+      "2027-03-29": "Ostermontag",
+      "2027-05-01": "Tag der Arbeit",
+      "2027-05-06": "Christi Himmelfahrt",
+      "2027-05-17": "Pfingstmontag",
+      "2027-10-03": "Tag der Deutschen Einheit",
+      "2027-12-25": "1. Weihnachtstag",
+      "2027-12-26": "2. Weihnachtstag"
+    };
+
+    const HOLIDAYS_DE_HH = {
+      // ----- 2025 (Hamburg) -----
+      "2025-01-01": "Neujahr",
+      "2025-04-18": "Karfreitag",
+      "2025-04-21": "Ostermontag",
+      "2025-05-01": "Tag der Arbeit",
+      "2025-05-29": "Christi Himmelfahrt",
+      "2025-06-09": "Pfingstmontag",
+      "2025-10-03": "Tag der Deutschen Einheit",
+      "2025-10-31": "Reformationstag",
+      "2025-12-25": "1. Weihnachtstag",
+      "2025-12-26": "2. Weihnachtstag",
+
+      // ----- 2026 (Hamburg) -----
+      "2026-01-01": "Neujahr",
+      "2026-04-03": "Karfreitag",
+      "2026-04-06": "Ostermontag",
+      "2026-05-01": "Tag der Arbeit",
+      "2026-05-14": "Christi Himmelfahrt",
+      "2026-05-25": "Pfingstmontag",
+      "2026-10-03": "Tag der Deutschen Einheit",
+      "2026-10-31": "Reformationstag",
+      "2026-12-25": "1. Weihnachtstag",
+      "2026-12-26": "2. Weihnachtstag",
+
+      // ----- 2027 (Hamburg) -----
+      "2027-01-01": "Neujahr",
+      "2027-03-26": "Karfreitag",
+      "2027-03-29": "Ostermontag",
+      "2027-05-01": "Tag der Arbeit",
+      "2027-05-06": "Christi Himmelfahrt",
+      "2027-05-17": "Pfingstmontag",
+      "2027-10-03": "Tag der Deutschen Einheit",
+      "2027-10-31": "Reformationstag",
+      "2027-12-25": "1. Weihnachtstag",
+      "2027-12-26": "2. Weihnachtstag"
+    };
+
+    // Mapping für die Region (Dropdown)
+    const HOLIDAYS_BY_REGION = {
+      "DE": HOLIDAYS_DE,
+      "DE-HH": { ...HOLIDAYS_DE, ...HOLIDAYS_DE_HH } // Hamburg = bundesweit + Reformationstag
+    };
+
+    /* ===========================
+       Hilfsfunktionen Kalender
+       =========================== */
+    const pad = n => String(n).padStart(2, '0');
+    const fmt = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+    const WEEKDAYS = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+    // Alle Monate zwischen Start und Ende (inklusive) als Array
+    function monthsBetween(startYM, endYM){
+      const [ys, ms] = startYM.split('-').map(Number);
+      const [ye, me] = endYM.split('-').map(Number);
+      const out = [];
+      let y = ys, m = ms;
+      while (y < ye || (y === ye && m <= me)){
+        out.push({y, m});
+        m++; if (m > 12){ m = 1; y++; }
+      }
+      return out;
+    }
+
+    // Baue eine Monatskarte
+    function buildMonth(year, month, holidayMap){
+      const first = new Date(year, month - 1, 1);
+      const last  = new Date(year, month, 0);
+      const firstWeekday = (first.getDay() || 7); // So(0) -> 7, Mo..So = 1..7
+      const daysInMonth  = last.getDate();
+
+      const wrap = document.createElement('section');
+      wrap.className = 'month';
+      wrap.setAttribute('role','group');
+      const monthName = first.toLocaleDateString('de-DE', { month:'long' });
+      wrap.setAttribute('aria-label', `${monthName} ${year}`);
+
+      wrap.innerHTML = `
+        <div class="month-header">
+          <span>${monthName.charAt(0).toUpperCase()+monthName.slice(1)}</span>
+          <small>${year}</small>
+        </div>
+        <div class="weekday-row">${WEEKDAYS.map(d=>`<span>${d}</span>`).join('')}</div>
+        <div class="grid"></div>
+      `;
+
+      const grid = wrap.querySelector('.grid');
+
+      // Leere Felder vor dem 1.
+      for (let i=1;i<firstWeekday;i++){
+        const empty = document.createElement('div');
+        empty.className = 'cell'; empty.setAttribute('aria-hidden','true');
+        grid.appendChild(empty);
+      }
+
+      // Tage
+      for (let d=1; d<=daysInMonth; d++){
+        const dt = new Date(year, month-1, d);
+        const wday = dt.getDay(); // 0..6 (So..Sa)
+        const iso = fmt(year, month, d);
+        const isWeekend = (wday===0)||(wday===6);
+        const isHoliday = Object.prototype.hasOwnProperty.call(holidayMap, iso);
+
+        const cell = document.createElement('div');
+        cell.className = 'cell' + (isWeekend ? ' weekend' : '') + (isHoliday ? ' holiday' : '');
+        cell.setAttribute('data-date', iso);
+        cell.innerHTML = `
+          <span class="day">${d}</span>
+          ${isHoliday ? `<div class="label" title="${holidayMap[iso]}">${holidayMap[iso]}</div>` : ''}
+        `;
+        grid.appendChild(cell);
+      }
+      return wrap;
+    }
+
+    function render(){
+      const region = document.getElementById('region').value;
+      const start  = document.getElementById('start').value || '2025-01';
+      const end    = document.getElementById('end').value   || '2027-12';
+      const target = document.getElementById('months');
+
+      target.innerHTML = '';
+      const months = monthsBetween(start, end);
+      const map = HOLIDAYS_BY_REGION[region] || {};
+
+      months.forEach(({y,m}) => target.appendChild(buildMonth(y,m,map)));
+    }
+
+    document.getElementById('build').addEventListener('click', render);
+    document.getElementById('region').addEventListener('change', render);
+    document.getElementById('start').addEventListener('change', render);
+    document.getElementById('end').addEventListener('change', render);
+
+    // Initiale Ausgabe
+    render();
+  </script>
+</body>
+</html>
